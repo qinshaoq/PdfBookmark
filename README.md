@@ -8,12 +8,12 @@ file, modify it easily and then import the content in the file to the PDF.
 Example:
 
 ```
-	Chapter 1 Title 1 1
-	Chapter 2 Title 2 4
-		2.1 SubTitle 2.1 4.2
-			2.1.1 SubTitle 2.1.1 4.5
-		2.2 SubTitle 2.2 7.3
-	Chapter 3 Title 3 8
+Chapter 1 Title 1 1
+Chapter 2 Title 2 4
+	2.1 SubTitle 2.1 4.2
+		2.1.1 SubTitle 2.1.1 4.5
+	2.2 SubTitle 2.2 7.3
+Chapter 3 Title 3 8
 ```
 
 The hierarchical structure of the bookmarks is controled by the Tab numbers
@@ -27,7 +27,7 @@ the bookmark is almost on the bottom of the page.
 
 ## Usage
 Typical usage of the file is:
-```
+```python
 import sys
 from PdfBookmark import PdfBookmark
 
