@@ -17,9 +17,13 @@ Chapter 3 Title 3 8
 ```
 
 The hierarchical structure of the bookmarks is controled by the Tab numbers
-at the begining of each line. In each line, the content is
-|tabs| |bookmark title| |page ratio|. |bookmark title| and |page ratio|
-must be separated by white spaces.|page ratio| is a decimal number,
+at the begining of each line.
+
+In each line, the content is |tabs| |bookmark title| |page ratio|.
+
+|bookmark title| and |page ratio| must be separated by white spaces.
+
+|page ratio| is a decimal number,
 the integer part represents the page numberof the bookmark, 
 the fractional part represents the location of the bookmark:
 .0 indicates that the bookmark is on the top of the page, .99 indicates that
@@ -29,9 +33,8 @@ the bookmark is almost on the bottom of the page.
 Typical usage of the file is:
 ```python
 import sys
-from PdfBookmark import PdfBookmark
-
 sys.path.append('C:/PyPDF2') # add PyPDF2 path to system path
+from PdfBookmark import PdfBookmark
 bm = PdfBookmark('a0.pdf')
 bm.exportBookmark('test.bm')
 ```

@@ -8,6 +8,9 @@
 # 	1) Export PDF's bookmarks to a user-defined bookmark file
 #	2) Import from bookmark file and add bookmarks to PDF
 #
+# Requirement:
+#	Python 2.7, PyPDF2
+#
 # Bookmark file format(Example):
 # ******************************************
 # *Chapter 1 Title 1 1                     *
@@ -134,7 +137,7 @@ class PdfBookmark(object):
         """
         stream = codecs.open(bookmarkFile, 'w', encoding='utf8')
         _writeBookmarkToStream(self.outlines, stream, 0)
-        print 'Done.'
+        print "Export %s's bookmarks to %s finished!" % (self.pdfFileName, bookmarkFile)
 
     def importBookmark(self, bookmarkFile, saveAsPdfName=None):
         """
@@ -151,7 +154,7 @@ class PdfBookmark(object):
             saveAsPdfName = self.pdfFileName[0:-4] + '_bookmark.pdf'
         stream = open(saveAsPdfName, 'wb')
         output.write(stream)
-        print 'Done.'
+        print "Add bookmarks in %s to %s finished!" % (bookmarkFile, saveAsPdfName)
 
     def _getPageLabels(self):
         """
