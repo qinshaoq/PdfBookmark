@@ -105,7 +105,7 @@ def _writeOutlinesToPdf(outlines, output, parent):
             bmTitle = (outline['/Title']).decode('UTF-8')
             bmTitle = (u'\uFEFF'+bmTitle).encode('UTF-16-BE') # see PDF reference(version 1.7) section 3.8.1 
             bmPage = int(ratio)
-            bmTop = output.getPage(0).mediaBox.getHeight()*(1-(ratio-bmPage))
+            bmTop = (float)(output.getPage(0).mediaBox.getHeight())*(1-(ratio-bmPage))
             bmCur = output.addBookmark(bmTitle, bmPage, parent, None, False, False, '/FitH', bmTop)
             lastBm = bmCur
         else:
