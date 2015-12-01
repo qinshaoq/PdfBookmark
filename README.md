@@ -5,15 +5,19 @@ Use this python file, you can export PDF's bookmarks to a user-defined
 file, modify it easily and then import the content in the file to the PDF.
 
 ## Install
-1. Excute the following command to clone the code.
-```
+1. Execute the following command to clone the code.
+
+ ```
 git clone http://github.com/qinshaoq/PdfBookmark
 ```
-2. Excute the following command to download the PyPDF2 submodule.
-```
+
+2. Execute the following command to download the PyPDF2 submodule.
+
+ ```
 git submodule init
 git submodule update
 ```
+
 Alternatively, you can download the [PdfBookmark.py](https://github.com/qinshaoq/PdfBookmark/blob/master/PdfBookmark.py) and [PyPDF2](https://github.com/mstamy2/PyPDF2) dirrectly.
 
 ## Bookmark file format
