@@ -65,3 +65,8 @@ you can also provide a PDF file name when you call the function `importBookmark`
 ```
 bm.importBookmark('test.bm', 'a1.pdf')
 ```
+
+## TODO
+1. Automatically extract `Table of Content` from text-like pdf files;
+2. Add OCR function to process the scanned pdf files where `Table of Content` pages are images;
+3. Add a GUI for intermediate .bm file preview and edit;
