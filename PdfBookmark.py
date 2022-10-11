@@ -202,7 +202,7 @@ class PdfBookmark(object):
 
 def main():
     # add PyPDF2 library to system path
-    sys.path.append('D:/QSQ/Desktop/PyPDF2-master/')
+    sys.path.append('/opt/homebrew/lib/python3.10/site-packages/PyPDF2/')
     bm = PdfBookmark('a0.pdf')
     print (bm.getBookmark())
     #bm.exportBookmark('test1.bm')
