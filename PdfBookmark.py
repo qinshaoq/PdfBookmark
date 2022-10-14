@@ -33,6 +33,7 @@
 import sys
 import re
 import codecs
+import PyPDF2
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
 def _writeBookmarkToStream(outlines, stream, level):
@@ -103,6 +104,7 @@ def _writeOutlinesToPdf(outlines, output, parent):
         if not type(outline)==list:
             ratio = outline['/Ratio']
             bmTitle = outline['/Title']
+            bmTitle = u'\uFEFF'+bmTitle
             bmPage = int(ratio)
             bmTop = (float)(output.getPage(0).mediaBox.getHeight())*(1-(ratio-bmPage))
             bmCur = output.addBookmark(str(bmTitle), bmPage, parent, None, False, False, '/FitH', bmTop)
@@ -191,7 +193,7 @@ class PdfBookmark(object):
                 top = outline['/Top']
             else:
                 top = pageHeight
-            if '/Zoom' in outline:
+            if '/Zoom' in outline and type(outline['/Zoom']) != PyPDF2.generic._base.NullObject and outline['/Zoom'] != 0:
                 zoom = outline['/Zoom']
             else:
                 zoom = 1
@@ -203,10 +205,10 @@ class PdfBookmark(object):
 def main():
     # add PyPDF2 library to system path
     sys.path.append('/opt/homebrew/lib/python3.10/site-packages/PyPDF2/')
-    bm = PdfBookmark('a0.pdf')
+    bm = PdfBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/a1.pdf')
     print (bm.getBookmark())
-    #bm.exportBookmark('test1.bm')
-    bm.importBookmark('test1.bm')
+    bm.exportBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/test1.bm')
+    bm.importBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/test1.bm')
 
 if __name__=='__main__':
     main()
