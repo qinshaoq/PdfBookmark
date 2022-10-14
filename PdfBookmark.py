@@ -46,6 +46,8 @@ def _writeBookmarkToStream(outlines, stream, level):
         outline = outlines[i]
         if type(outline)==list:
             _writeBookmarkToStream(outline, stream, level+1)
+        elif type(outline['/Page']) == PyPDF2.generic._base.NullObject: # 存在不指向具体页面的空白目录（标签）项，跳过
+            continue
         else:
             for j in range(0,level):
                 stream.write('\t')
@@ -182,6 +184,8 @@ class PdfBookmark(object):
             elif not '/Page' in outline:
                 print ("Error: outline has no key '/Page'")
                 sys.exit(-1)
+            if type(outline['/Page']) == PyPDF2.generic._base.NullObject: # 存在不指向具体页面的空白目录（标签）项，跳过
+                continue
             pageHeight = outline['/Page']['/MediaBox'][-1]
             idIndirect = outline.page.idnum
             if idIndirect in pageLabels:
@@ -193,7 +197,7 @@ class PdfBookmark(object):
                 top = outline['/Top']
             else:
                 top = pageHeight
-            if '/Zoom' in outline and type(outline['/Zoom']) != PyPDF2.generic._base.NullObject and outline['/Zoom'] != 0:
+            if '/Zoom' in outline and type(outline['/Zoom']) != PyPDF2.generic._base.NullObject and outline['/Zoom'] != 0: # 排除outline['/Zoom']存在的特殊情况
                 zoom = outline['/Zoom']
             else:
                 zoom = 1
@@ -205,10 +209,10 @@ class PdfBookmark(object):
 def main():
     # add PyPDF2 library to system path
     sys.path.append('/opt/homebrew/lib/python3.10/site-packages/PyPDF2/')
-    bm = PdfBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/a1.pdf')
+    bm = PdfBookmark('/Users/Ye/Downloads/有目录但未ocr/[美]卡斯滕·哈里斯：无限与视角.pdf')
     print (bm.getBookmark())
-    bm.exportBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/test1.bm')
-    bm.importBookmark('/Users/Ye/GitHub/PdfBookmark/Samples/test1.bm')
+    bm.exportBookmark('/Users/Ye/Desktop/test1.bm')
+    bm.importBookmark('/Users/Ye/Desktop/test1.bm')
 
 if __name__=='__main__':
     main()
