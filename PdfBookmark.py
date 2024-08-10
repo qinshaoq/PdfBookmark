@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # -*- coding: UTF-8 -*-
 #
 # Author: Shaoqian Qin
@@ -34,7 +34,8 @@ import sys
 import re
 import codecs
 import PyPDF2
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2.generic import PAGE_FIT
 
 
 def _writeBookmarkToStream(outlines, stream, level):
@@ -100,7 +101,7 @@ def readBookmarkFromFile(bmPathName):
 def _writeOutlinesToPdf(outlines, output, parent):
     """
     Add bookmarks stored in outlines.
-    param output: PyPDF2.PdfFileWriter object
+    param output: PyPDF2.PdfWriter object
     param parent: parent bookmark
     """
     lastBm = parent
@@ -111,8 +112,7 @@ def _writeOutlinesToPdf(outlines, output, parent):
             bmTitle = outline['/Title']
             bmTitle = u'\uFEFF' + bmTitle
             bmPage = int(ratio)
-            bmTop = (float)(output.getPage(0).mediaBox.getHeight()) * (1 - (ratio - bmPage))
-            bmCur = output.addBookmark(str(bmTitle), bmPage, parent, None, False, False, '/FitH', bmTop)
+            bmCur = output.add_outline_item(str(bmTitle), bmPage, parent, None, None, False, False, PAGE_FIT)
             lastBm = bmCur
         else:
             _writeOutlinesToPdf(outline, output, lastBm)
@@ -127,10 +127,10 @@ class PdfBookmark(object):
     def __init__(self, pdfPathName):
         self.pdfFileName = pdfPathName
         self._pdfStream = open(self.pdfFileName, 'rb')
-        self._pdfReader = PdfFileReader(self._pdfStream)
+        self._pdfReader = PdfReader(self._pdfStream)
 
         self.pageLabels = self._getPageLabels()
-        self.outlines = self._pdfReader.getOutlines()
+        self.outlines = self._pdfReader.outline
         self._addPageRatio(self.outlines, self.pageLabels)
 
     def getBookmark(self):
@@ -153,9 +153,9 @@ class PdfBookmark(object):
         to the current pdf file or another pdf file.
         """
         outlines = readBookmarkFromFile(bookmarkFile)
-        output = PdfFileWriter()
-        for i in range(0, self._pdfReader.getNumPages()):
-            output.addPage(self._pdfReader.getPage(i))
+        output = PdfWriter()
+        for i in range(0, len(self._pdfReader.pages)):
+            output.add_page(self._pdfReader.pages[i])
         _writeOutlinesToPdf(outlines, output, None)
 
         if saveAsPdfName is None:
@@ -172,7 +172,7 @@ class PdfBookmark(object):
         pages = list(self._pdfReader.pages)
         for i in range(0, len(pages)):
             page: PyPDF2.pdf.PageObject = pages[i]
-            pageLabels[page.indirectRef.idnum] = i + 1
+            pageLabels[page.indirect_ref.idnum] = i + 1
         return pageLabels
 
     def _addPageRatio(self, outlines, pageLabels):
@@ -191,7 +191,7 @@ class PdfBookmark(object):
                 sys.exit(-1)
             if type(outline['/Page']) == PyPDF2.generic.NullObject:  # 存在不指向具体页面的空白目录（标签）项，跳过
                 continue
-            pageHeight = outline['/Page']['/MediaBox'][-1]
+            pageHeight = outline['/Page']['/mediabox'][-1]
             idIndirect = outline.page.idnum
             if idIndirect in pageLabels:
                 pageNum = pageLabels[idIndirect]
@@ -213,12 +213,12 @@ class PdfBookmark(object):
 
 
 def main():
-    # add PyPDF2 library to system path
-    sys.path.append('/opt/homebrew/lib/python3.10/site-packages/PyPDF2/')
-    bm = PdfBookmark('/Users/Ye/Downloads/有目录但未ocr/[美]卡斯滕·哈里斯：无限与视角.pdf')
-    print(bm.getBookmark())
-    bm.exportBookmark('/Users/Ye/Desktop/test1.bm')
-    bm.importBookmark('/Users/Ye/Desktop/test1.bm')
+
+    # 以下为测试代码
+    bm = PdfBookmark('/Users/name/Downloads/带目录的PDF/[美]卡斯滕·哈里斯：无限与视角.pdf')
+    print (bm.getBookmark())
+    bm.exportBookmark('/Users/name/Downloads/导出的bm文件/test1.bm')
+    bm.importBookmark('/Users/name/Downloads/导入的bm文件/test2.bm')
 
 
 if __name__ == '__main__':
