@@ -158,7 +158,7 @@ class PdfBookmark(object):
             output.add_page(self._pdfReader.pages[i])
         _writeOutlinesToPdf(outlines, output, None)
 
-        if saveAsPdfName is None:
+        if saveAsPdfName == None:
             saveAsPdfName = self.pdfFileName[0:-4] + '_bookmark.pdf'
         stream = open(saveAsPdfName, 'wb')
         output.write(stream)
