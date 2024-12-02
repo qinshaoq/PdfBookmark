@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 # -*- coding: UTF-8 -*-
 #
 # Author: Shaoqian Qin
@@ -9,7 +9,7 @@
 #	2) Import from bookmark file and add bookmarks to PDF
 #
 # Requirement:
-#	Python 2.7, PyPDF2
+#	Python 3.10, PyPDF2
 #
 # Bookmark file format(Example):
 # ******************************************
@@ -33,7 +33,10 @@
 import sys
 import re
 import codecs
-from PyPDF2 import PdfFileReader, PdfFileWriter
+import PyPDF2
+from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2.generic import PAGE_FIT
+
 
 def _writeBookmarkToStream(outlines, stream, level):
     """
@@ -41,16 +44,19 @@ def _writeBookmarkToStream(outlines, stream, level):
     param outlines: PyPDF2.generic.Destination list
     param level: bookmark level, the topmost level is 0
     """
-    for i in range(0,len(outlines)):
+    for i in range(0, len(outlines)):
         outline = outlines[i]
-        if type(outline)==list:
-            _writeBookmarkToStream(outline, stream, level+1)
+        if type(outline) == list:
+            _writeBookmarkToStream(outline, stream, level + 1)
+        elif type(outline['/Page']) == PyPDF2.generic.NullObject:  # 存在不指向具体页面的空白目录（标签）项，跳过
+            continue
         else:
-            for j in range(0,level):
+            for j in range(0, level):
                 stream.write('\t')
             bmTitle = outline['/Title']
             bmRatio = outline['/Ratio']
-            stream.write(bmTitle+' '+('%.2f' % bmRatio)+'\n')
+            stream.write(bmTitle + ' ' + ('%.2f' % bmRatio) + '\n')
+
 
 def readBookmarkFromFile(bmPathName):
     """
@@ -59,29 +65,29 @@ def readBookmarkFromFile(bmPathName):
     """
     outlines = []
     lastTabNum = 0
-    r = re.compile( r'\s*(.*)\s+(\d+\.*\d*)\s*' )
-    r2 = re.compile( r'\s*\S.*' )
+    r = re.compile(r'\s*(.*)\s+(\d+\.*\d*)\s*')
+    r2 = re.compile(r'\s*\S.*')
     for line in open(bmPathName):
-        if not r2.match(line): # line contain only white spaces
+        if not r2.match(line):  # line contain only white spaces
             continue
         matchObj = r.match(line)
         if not matchObj:
-            print 'bookmark file format error in: ' + line
+            print('bookmark file format error in: ' + line)
             sys.exit(0)
         tabNum = matchObj.start(1)
         bmTitle = matchObj.group(1)
-        pageRatio = float(matchObj.group(2))-1
+        pageRatio = float(matchObj.group(2)) - 1
         bmPage = int(pageRatio)
-        bmRatio = pageRatio-bmPage
-        outline={}
+        bmRatio = pageRatio - bmPage
+        outline = {}
         outline['/Title'] = bmTitle
         outline['/Ratio'] = pageRatio
         tempOutlines = outlines
-        if tabNum > lastTabNum+1:
-            print 'bookmark file format error in: ' + line
+        if tabNum > lastTabNum + 1:
+            print('bookmark file format error in: ' + line)
             sys.exit(0)
-        elif tabNum == lastTabNum+1:
-            for i in range(0, tabNum-1):
+        elif tabNum == lastTabNum + 1:
+            for i in range(0, tabNum - 1):
                 tempOutlines = tempOutlines[-1]
             tempOutlines.append([outline])
         else:
@@ -91,38 +97,40 @@ def readBookmarkFromFile(bmPathName):
         lastTabNum = tabNum
     return outlines
 
+
 def _writeOutlinesToPdf(outlines, output, parent):
     """
     Add bookmarks stored in outlines.
-    param output: PyPDF2.PdfFileWriter object
+    param output: PyPDF2.PdfWriter object
     param parent: parent bookmark
     """
     lastBm = parent
-    for i in range(0,len(outlines)):
+    for i in range(0, len(outlines)):
         outline = outlines[i]
-        if not type(outline)==list:
+        if not type(outline) == list:
             ratio = outline['/Ratio']
-            bmTitle = (outline['/Title']).decode('UTF-8')
-            bmTitle = (u'\uFEFF'+bmTitle).encode('UTF-16-BE') # see PDF reference(version 1.7) section 3.8.1 
+            bmTitle = outline['/Title']
+            bmTitle = u'\uFEFF' + bmTitle
             bmPage = int(ratio)
-            bmTop = (float)(output.getPage(0).mediaBox.getHeight())*(1-(ratio-bmPage))
-            bmCur = output.addBookmark(bmTitle, bmPage, parent, None, False, False, '/FitH', bmTop)
+            bmCur = output.add_outline_item(str(bmTitle), bmPage, parent, None, None, False, False, PAGE_FIT)
             lastBm = bmCur
         else:
             _writeOutlinesToPdf(outline, output, lastBm)
+
 
 class PdfBookmark(object):
     """
     This class supports import/export PDF's
     bookmarks from/to a file.
     """
+
     def __init__(self, pdfPathName):
         self.pdfFileName = pdfPathName
         self._pdfStream = open(self.pdfFileName, 'rb')
-        self._pdfReader = PdfFileReader(self._pdfStream)
+        self._pdfReader = PdfReader(self._pdfStream)
 
         self.pageLabels = self._getPageLabels()
-        self.outlines = self._pdfReader.getOutlines()
+        self.outlines = self._pdfReader.outline
         self._addPageRatio(self.outlines, self.pageLabels)
 
     def getBookmark(self):
@@ -137,7 +145,7 @@ class PdfBookmark(object):
         """
         stream = codecs.open(bookmarkFile, 'w', encoding='utf8')
         _writeBookmarkToStream(self.outlines, stream, 0)
-        print "Export %s's bookmarks to %s finished!" % (self.pdfFileName, bookmarkFile)
+        print("Export %s's bookmarks to %s finished!" % (self.pdfFileName, bookmarkFile))
 
     def importBookmark(self, bookmarkFile, saveAsPdfName=None):
         """
@@ -145,16 +153,16 @@ class PdfBookmark(object):
         to the current pdf file or another pdf file.
         """
         outlines = readBookmarkFromFile(bookmarkFile)
-        output = PdfFileWriter()
-        for i in range(0, self._pdfReader.getNumPages()):
-            output.addPage(self._pdfReader.getPage(i))
+        output = PdfWriter()
+        for i in range(0, len(self._pdfReader.pages)):
+            output.add_page(self._pdfReader.pages[i])
         _writeOutlinesToPdf(outlines, output, None)
-        
+
         if saveAsPdfName == None:
             saveAsPdfName = self.pdfFileName[0:-4] + '_bookmark.pdf'
         stream = open(saveAsPdfName, 'wb')
         output.write(stream)
-        print "Add bookmarks in %s to %s finished!" % (bookmarkFile, saveAsPdfName)
+        print("Add bookmarks in %s to %s finished!" % (bookmarkFile, saveAsPdfName))
 
     def _getPageLabels(self):
         """
@@ -163,8 +171,8 @@ class PdfBookmark(object):
         pageLabels = {}
         pages = list(self._pdfReader.pages)
         for i in range(0, len(pages)):
-            page = pages[i]
-            pageLabels[page.indirectRef.idnum] = i+1
+            page: PyPDF2.pdf.PageObject = pages[i]
+            pageLabels[page.indirect_ref.idnum] = i + 1
         return pageLabels
 
     def _addPageRatio(self, outlines, pageLabels):
@@ -178,21 +186,24 @@ class PdfBookmark(object):
             if type(outline) == list:
                 self._addPageRatio(outlines[i], pageLabels)
                 continue
-            elif not outline.has_key('/Page'):
-                print "Error: outline has no key '/Page'"
+            elif not '/Page' in outline:
+                print("Error: outline has no key '/Page'")
                 sys.exit(-1)
-            pageHeight = outline['/Page']['/MediaBox'][-1]
+            if type(outline['/Page']) == PyPDF2.generic.NullObject:  # 存在不指向具体页面的空白目录（标签）项，跳过
+                continue
+            pageHeight = outline['/Page']['/mediabox'][-1]
             idIndirect = outline.page.idnum
-            if pageLabels.has_key(idIndirect):
+            if idIndirect in pageLabels:
                 pageNum = pageLabels[idIndirect]
             else:
-                print 'Error: Page corresponds to IndirectObject %d not Found' % idIndirect
+                print('Error: Page corresponds to IndirectObject %d not Found' % idIndirect)
                 sys.exit(-1)
-            if outline.has_key('/Top'):
+            if '/Top' in outline:
                 top = outline['/Top']
             else:
                 top = pageHeight
-            if outline.has_key('/Zoom'):
+            if '/Zoom' in outline and type(outline['/Zoom']) != PyPDF2.generic.NullObject and outline[
+                '/Zoom'] != 0:  # 排除outline['/Zoom']存在的特殊情况
                 zoom = outline['/Zoom']
             else:
                 zoom = 1
@@ -202,12 +213,13 @@ class PdfBookmark(object):
 
 
 def main():
-    # add PyPDF2 library to system path
-    sys.path.append('D:/QSQ/Desktop/PyPDF2-master/')
-    bm = PdfBookmark('a0.pdf')
-    print bm.getBookmark()
-    #bm.exportBookmark('test1.bm')
-    bm.importBookmark('test1.bm')
 
-if __name__=='__main__':
+    # 以下为测试代码
+    bm = PdfBookmark('/Users/name/Downloads/带目录的PDF/[美]卡斯滕·哈里斯：无限与视角.pdf')
+    print (bm.getBookmark())
+    bm.exportBookmark('/Users/name/Downloads/导出的bm文件/test1.bm')
+    bm.importBookmark('/Users/name/Downloads/导入的bm文件/test2.bm')
+
+
+if __name__ == '__main__':
     main()
